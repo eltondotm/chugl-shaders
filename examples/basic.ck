@@ -9,7 +9,7 @@ null => desc.vertexLayout;
 Shader basicShader(desc);
 basicShader.name("Screen Shader");
 
-// Assign the shader to a screen pass (shader pipeline applied to the full screen)
+// Assign the shader to a screen pass (graphics pipeline applied to the full screen)
 ScreenPass basic(basicShader);
 
 // Rewire the render graph to only contain our screen shader (ignoring the scene)
