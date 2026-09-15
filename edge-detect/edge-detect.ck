@@ -1,8 +1,4 @@
-/* name: edge-detect.ck
- * --------------------
- * "Homer FMV Model - The Simpsons: Hit & Run" (https://skfb.ly/pDZE9) by DB
- * is licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
- */
+/* name: edge-detect.ck */
 
 // Create a new scene to render a depth/normal buffer (not built-in to ChuGL)
 GScene buffScene;
@@ -41,14 +37,15 @@ null => outlineDesc.vertexLayout;
 Shader outlineShader(outlineDesc);
 outlineShader.name("outline");
 
+// Initializing parameters to tune depth/normal sensitivity
+@(0.5, 0.5) @=> vec2 thresholds;
+
 // Creating the outline pass and binding textures
 ScreenPass outlinePass(outlineShader);
 outlinePass.material().texture(0, GG.scenePass().colorOutput());
 outlinePass.material().texture(1, buffer);
 outlinePass.material().sampler(2, TextureSampler.linear());
-
-// IMPORTANT: update the texture input to the output pass
-//GG.outputPass().colorInput()
+outlinePass.material().uniformFloat2(3, thresholds*0.01);
 
 // Wire the new passes into the render graph
 GG.scenePass() --> buffPass --> outlinePass;
@@ -69,7 +66,19 @@ model[0] --> GG.scene();
 model[1].material(depthNormal);
 model[1] --> buffScene;
 
-while( true )
+// Initialize UI vars
+UI_Float c1(thresholds.x);
+UI_Float c2(thresholds.y);
+
+while (true)
 {
     GG.nextFrame() => now;
+
+    if (UI.begin("Posterization Example")) {
+        false => int update;  // Using a single if statement causes disapearring sliders
+        if (UI.slider("Depth Threshold", c1, 0.0, 1.0)) { c1.val() => thresholds.x; true => update; }
+        if (UI.slider("Normal Threshold", c2, 0.0, 1.0)) { c2.val() => thresholds.y; true => update; }
+        
+        if (update) { outlinePass.material().uniformFloat2(3, thresholds*0.01); }
+    }
 }

@@ -7,6 +7,8 @@
 @group(1) @binding(1) var buffer_texture : texture_2d<f32>;
 @group(1) @binding(2) var texture_sampler : sampler;
 
+@group(1) @binding(3) var<uniform> thresholds : vec2f;
+
 @fragment 
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let UNUSED = u_frame; 
@@ -26,11 +28,11 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let edge_normal = fwidth(normal);
     let edge_depth = fwidth(depth);
 
-    if (edge_depth > 0.01) {
+    if (edge_depth > thresholds.x) {
         return vec4f(0.0, 1.0, 0.0, 1.0);
     }
 
-    if (dot(edge_normal, edge_normal) > 0.1) {
+    if (dot(edge_normal, edge_normal) > thresholds.y) {
         return vec4f(1.0, 0.0, 1.0, 1.0);
     }
     

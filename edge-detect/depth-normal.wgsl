@@ -26,9 +26,7 @@ fn fs_main(in : VertexOutput, @builtin(front_facing) front : bool) -> @location(
     let UNUSED = u_frame;
 
     let normal = max(in.v_normal, vec3f(0.0));
-    let latitude = atan2(normal.y, length(normal.xz));
-    let longitude = atan2(normal.z, normal.x);
     let depth = in.position.z;
 
-    return vec4f(latitude, longitude, depth, 1.0);
+    return vec4f(normal.xy, depth, 1.0);
 }
