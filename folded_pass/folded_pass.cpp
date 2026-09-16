@@ -6,6 +6,21 @@
 #include <string>
 #include <vector>
 
+/* USAGE: .\folded_pass [passes]
+ * EXAMPLE: .\folded_pass output lut vignette
+ * Current options:
+ *   vignette
+ *   aberration
+ *   lut
+ *   output
+ *
+ * TODO:
+ * Handle multiple instances of the same effect
+ * Replace uniform names on naming collision
+ * Generate ChuGL uniform binding code as well
+ * Read passes from files instead of string literals
+ */
+
 enum Type 
 {
     F32,
@@ -273,7 +288,25 @@ std::string gen_folded_pass(const std::vector<Pass>& passes)
 
 int main(int argc, char* argv[])
 {
-    std::vector<Pass> passes = { output, lut, vignette };
+    std::vector<Pass> passes;
+    if (argc == 1)
+    {
+        passes.push_back(output);
+        passes.push_back(lut);
+        passes.push_back(vignette);
+    }
+    else
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            std::string arg = argv[i];
+            if (arg == "vignette")        { passes.push_back(vignette); }
+            else if (arg == "aberration") { passes.push_back(aberration); }
+            else if (arg == "lut")        { passes.push_back(lut); }
+            else if (arg == "output")     { passes.push_back(output); }
+            else { std::cerr << "Invalid pass: " << arg << std::endl; }
+        }
+    }
     std::string folded_pass = gen_folded_pass(passes);
 
     std::ofstream pass_file("folded_pass.wgsl");
