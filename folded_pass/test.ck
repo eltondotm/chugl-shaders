@@ -42,11 +42,11 @@ GG.scenePass() --> ScreenPass folded_pass(folded);
 // Set shader uniforms
 folded_pass.material().texture(0, GG.renderPass().colorOutput());
 folded_pass.material().sampler(1, TextureSampler.linear());
-folded_pass.material().uniformInt(2, 1);       // gamma
-folded_pass.material().uniformFloat(3, 1.0);   // exposure
-folded_pass.material().uniformInt(4, 0);       // tonemap
-folded_pass.material().texture(5, lut);        // lut texture
-folded_pass.material().sampler(6, TextureSampler.linear());
+folded_pass.material().texture(2, lut);        // lut texture
+folded_pass.material().sampler(3, TextureSampler.linear());
+folded_pass.material().uniformInt(4, 1);       // gamma
+folded_pass.material().uniformFloat(5, 1.0);   // exposure
+folded_pass.material().uniformInt(6, 0);       // tonemap
 folded_pass.material().uniformFloat(7, 0.2);   // vignette radius
 folded_pass.material().uniformFloat(8, 0.6);   // vignette strength
 

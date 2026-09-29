@@ -9,15 +9,42 @@
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let frame = u_frame; 
     var color = textureSample(texture, texture_sampler, in.v_uv);
-	color = output(color, in.v_uv);
 	color = lut(color, in.v_uv);
+	color = output(color, in.v_uv);
 	color = vignette(color, in.v_uv);
 	return color;
 }
 
-@group(1) @binding(2) var<uniform> u_Gamma: i32;
-@group(1) @binding(3) var<uniform> u_Exposure: f32;
-@group(1) @binding(4) var<uniform> u_Tonemap: i32;
+@group(1) @binding(2) var lut_texture: texture_2d<f32>;
+@group(1) @binding(3) var lut_sampler: sampler;
+
+// https://webgpufundamentals.org/webgpu/lessons/webgpu-3dlut.html
+// https://webgpufundamentals.org/webgpu/lessons/webgpu-3dlut.html
+fn lut(color: vec4f, uv: vec2f) -> vec4f 
+{
+    let size_flat = vec2f(textureDimensions(lut_texture, 0));
+    let depth = size_flat.x / size_flat.y;
+    let size = vec3f(size_flat.y, size_flat.y, depth);
+    let range = (size - 1.0) / size;
+    let uvw = 0.5 / size + color.rgb * range;
+  
+    // manual interpolation while 3D texture loading unsupported
+    let slice_coord = uvw.z * depth;
+    let w_l = floor(slice_coord);
+    let w_r = ceil(slice_coord);
+    let t = fract(slice_coord);
+
+    let uv_l = vec2f((w_l + uvw.x) / depth, uvw.y);
+    let uv_r = vec2f((w_r + uvw.x) / depth, uvw.y);
+
+    let col_l = textureSample(lut_texture, lut_sampler, uv_l);
+    let col_r = textureSample(lut_texture, lut_sampler, uv_r);
+    return mix(col_l, col_r, t);
+}
+    
+@group(1) @binding(4) var<uniform> u_Gamma: i32;
+@group(1) @binding(5) var<uniform> u_Exposure: f32;
+@group(1) @binding(6) var<uniform> u_Tonemap: i32;
 
 const TONEMAP_NONE = 0;
 const TONEMAP_LINEAR = 1;
@@ -110,33 +137,6 @@ fn output(color: vec4f, uv: vec2f) -> vec4f {
 
     return vec4<f32>(out_color, 1.0); // how does alpha work?
     // return vec4<f32>(out_color, clamp(hdrColor.a, 0.0, 1.0));
-}
-    
-@group(1) @binding(5) var lut_texture: texture_2d<f32>;
-@group(1) @binding(6) var lut_sampler: sampler;
-
-// https://webgpufundamentals.org/webgpu/lessons/webgpu-3dlut.html
-// https://webgpufundamentals.org/webgpu/lessons/webgpu-3dlut.html
-fn lut(color: vec4f, uv: vec2f) -> vec4f 
-{
-    let size_flat = vec2f(textureDimensions(lut_texture, 0));
-    let depth = size_flat.x / size_flat.y;
-    let size = vec3f(size_flat.y, size_flat.y, depth);
-    let range = (size - 1.0) / size;
-    let uvw = 0.5 / size + color.rgb * range;
-  
-    // manual interpolation while 3D texture loading unsupported
-    let slice_coord = uvw.z * depth;
-    let w_l = floor(slice_coord);
-    let w_r = ceil(slice_coord);
-    let t = fract(slice_coord);
-
-    let uv_l = vec2f((w_l + uvw.x) / depth, uvw.y);
-    let uv_r = vec2f((w_r + uvw.x) / depth, uvw.y);
-
-    let col_l = textureSample(lut_texture, lut_sampler, uv_l);
-    let col_r = textureSample(lut_texture, lut_sampler, uv_r);
-    return mix(col_l, col_r, t);
 }
     
 @group(1) @binding(7) var<uniform> vignette_size: f32;

@@ -291,8 +291,9 @@ int main(int argc, char* argv[])
     std::vector<Pass> passes;
     if (argc == 1)
     {
-        passes.push_back(output);
+        // Default passes
         passes.push_back(lut);
+        passes.push_back(output);
         passes.push_back(vignette);
     }
     else
